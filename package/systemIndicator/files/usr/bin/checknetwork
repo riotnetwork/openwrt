@@ -1,0 +1,118 @@
+#!/bin/ash
+
+
+#some utility functions
+
+# export ( create) GPIO
+# gpio_export 26 : will create gpio 26
+gpio_export()
+{
+  # Accept numeric argument
+  if echo "$1" | egrep '^[0-9][0-9]*$' >/dev/null; then :
+    GPIO=$1
+  else :
+    echo "gpio_export: unrecognized GPIO ID '$1'" >&2
+    return
+  fi
+  # check if the GPIO exists
+  if [ -e /sys/class/gpio/gpio${GPIO} ]
+    then
+      return $?
+  else
+    echo $GPIO >/sys/class/gpio/export
+    return $?
+  fi
+  
+}
+
+
+gpio_unexport()
+{
+  # Accept numeric argument
+  if echo "$1" | egrep '^[0-9][0-9]*$' >/dev/null; then :
+    GPIO=$1
+  else :
+    echo "gpio_unexport: unrecognized GPIO ID '$1'" >&2
+    return
+  fi
+  # check if the GPIO exists
+  if [ -e /sys/class/gpio/gpio${GPIO} ]
+    then
+      echo $GPIO >/sys/class/gpio/unexport
+      return $?
+  else
+    return $?
+  fi
+}
+
+# set gpio direction 
+# gpio_direction 26 out
+# gpio_direction 26 in
+gpio_direction()
+{
+  # Accept numeric argument
+  if echo "$1" | egrep '^[0-9][0-9]*$' >/dev/null; then :
+    GPIO=$1
+  else :
+    echo "gpio_direction: unrecognized GPIO ID '$1'" >&2
+    return
+  fi
+  echo $2 >/sys/class/gpio/gpio${GPIO}/direction
+  return $?
+}
+
+# set GPIO state if output :
+# gpio_output 26 0
+# gpio_output 26 1
+gpio_output()
+{
+  # Accept numeric argument
+  if echo "$1" | egrep '^[0-9][0-9]*$' >/dev/null; then :
+    GPIO=$1
+  else :
+    echo "gpio_output: unrecognized GPIO ID '$1'" >&2
+    return
+  fi
+  echo $2 >/sys/class/gpio/gpio${GPIO}/value
+  return $?
+}
+
+# read gpio status if input : 
+# gpio_input 26
+# VAL=$? # The pin value is returned as status.
+gpio_input()
+{
+  # Accept numeric argument
+  if echo "$1" | egrep '^[0-9][0-9]*$' >/dev/null; then :
+    GPIO=$1
+  else :
+    echo "gpio_input: unrecognized GPIO ID '$1'" >&2
+    return
+  fi
+  VAL=`cat /sys/class/gpio/gpio${GPIO}/value`
+  return $VAL
+}
+
+
+###echo 
+# Main body of script starts here
+# echo <status><up><down> > /dev/spidev1.0
+###
+
+# setup ports
+# Chipselect
+gpio_export 26
+gpio_direction 26 out
+gpio_output 26 1
+
+# our transaction
+gpio_output 21 1
+gpio_output 26 0
+# echo -n -e '\xC0\x0F\x0F' > /dev/spidev1.0
+
+ifconfig | systemIndicator eth1 mesh1 > /dev/spidev1.0
+gpio_output 26 1
+gpio_output 21 0
+
+
+

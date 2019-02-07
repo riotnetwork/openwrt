@@ -1,0 +1,54 @@
+<%#
+
+   NOTE: per the tutorial controller this file would live in
+   /usr/lib/lua/luci/view/gpsd_status.htm
+   
+LuCI - Lua Configuration Interface
+Copyright 2008 Steven Barth <steven@midlink.org>
+Copyright 2008 Jo-Philipp Wich <xm@leipzig.freifunk.net>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+$Id$
+
+-%>
+<script type="text/javascript">//<![CDATA[
+	XHR.poll(5, '<%=url("admin/services/gpsd_status")%>', null,
+		function(x, st)
+		{
+			var tb = document.getElementById('gpsd_status');
+			if (st && tb)
+			{
+				if (st.running)
+				{
+					tb.innerHTML = String.format(
+						'<%:The gpsd service is active, current lock is %d,lon: %d, lat: %d.%>',
+							st.lock, st.lon, st.lat
+					);
+				}
+				else
+				{
+					tb.innerHTML = '<em><%:The gpsd service is not running.%></em>';
+				}
+			}
+		}
+	);
+//]]></script>
+
+<%+header%>
+
+        <fieldset class="cbi-section">
+                <legend><%:GPSd Status%></legend>
+                <p id="gpsd_status">
+                        <em><%:Collecting data...%></em>
+                </p>
+        </fieldset>
+
+
+<%+footer%>
+
+

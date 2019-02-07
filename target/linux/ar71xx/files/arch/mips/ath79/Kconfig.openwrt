@@ -164,6 +164,16 @@ config ATH79_MACH_ARDUINO_YUN
 	select ATH79_DEV_USB
 	select ATH79_DEV_WMAC
 
+config ATH79_MACH_ALBATROSS
+	bool "RIOT Albatross"
+	select SOC_AR933X
+	select ATH79_DEV_ETH
+	select ATH79_DEV_GPIO_BUTTONS
+	select ATH79_DEV_LEDS_GPIO
+	select ATH79_DEV_M25P80
+	select ATH79_DEV_USB
+	select ATH79_DEV_WMAC
+
 config ATH79_MACH_AP132
 	bool "Atheros AP132 reference board"
 	select SOC_QCA955X

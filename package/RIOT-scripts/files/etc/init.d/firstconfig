@@ -1,0 +1,38 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2010 Jo-Philipp Wich
+
+START=50
+
+#USE_PROCD=1
+
+start() {
+	FIRST_CONF=`uci get arduino.@arduino[0].first_configuration`
+	if [ x$FIRST_CONF == x1 ]
+	then
+
+		CERT=`uci get uhttpd.main.cert`
+		KEY=`uci get uhttpd.main.key`
+		rm -f $CERT $KEY
+
+		# clone eth0 mac address to eth1
+		mac_addr_eth0=`ifconfig eth0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`
+		uci set network.wan.macaddr=$mac_addr_eth0
+		uci commit network
+		# apply it immediately
+		ifconfig eth1 down
+		ifconfig eth1 hw ether $mac_addr_eth0
+		ifconfig eth1 up
+
+		uci set uhttpd.main.redirect_https=0
+		uci set arduino.@arduino[0].first_configuration=0
+		uci commit
+
+		#redirect to cgi script for choosing http/https
+		#cp /www/index.html /www/index.html.bak
+		#echo '<html>' > /www/index.html
+		#echo '<head>' >> /www/index.html
+		#echo '<meta http-equiv="refresh" content="0; url=/cgi-bin/firstconfig.cgi">' >> /www/index.html
+		#echo '</head>' >> /www/index.html
+		#echo '</html>' >> /www/index.html
+	fi
+}

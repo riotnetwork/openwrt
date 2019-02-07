@@ -418,6 +418,9 @@ ar71xx_board_detect() {
 	*"AirRouter")
 		name="airrouter"
 		;;
+	*"RIOT Albatross")
+		name="albatross"
+		;;
 	*"ALFA Network AP120C")
 		name="alfa-ap120c"
 		;;

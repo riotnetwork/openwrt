@@ -286,6 +286,16 @@ define Device/engenius_ews511ap
 endef
 TARGET_DEVICES += engenius_ews511ap
 
+define Device/albatross
+  ATH_SOC := ar9331
+  DEVICE_TITLE := RIOT Albatross
+  DEVICE_PACKAGES := kmod-usb-chipidea2 kmod-usb-core kmod-usb2
+  IMAGE_SIZE := 15936k
+  SUPPORTED_DEVICES += albatross,
+  IMAGE/sysupgrade.bin = append-kernel $$$$(BLOCKSIZE)| pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs | append-metadata |  check-size $$$$(IMAGE_SIZE)
+endef
+TARGET_DEVICES += albatross
+
 define Device/etactica_eg200
   ATH_SOC := ar9331
   DEVICE_TITLE := eTactica EG200

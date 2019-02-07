@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+
+# Update /etc/avahi/services/arduino.service to announce 
+# correct hardware flavor
+
+START=23
+
+start() {
+	uci set system.@rngd[0].enabled='1'
+	uci commit
+}

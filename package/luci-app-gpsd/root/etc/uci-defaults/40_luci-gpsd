@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# needed for "Save and Apply" to restart gpsd
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@gpsd[-1]
+	add ucitrack gpsd
+ 	set ucitrack.@gpsd[-1].init="gpsd"
+#	set ucitrack.@gpsd[-1].exec="/etc/init.d/gpsd restart"
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache /tmp/luci-modulecache
+exit 0

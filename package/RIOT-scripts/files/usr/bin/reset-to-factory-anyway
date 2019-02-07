@@ -1,0 +1,9 @@
+#!/bin/sh
+
+PATH=$PATH:/bin:/sbin:/usr/bin
+
+blink-start 100 system
+reset_has_fo=true
+
+echo y | /sbin/firstboot
+/sbin/reboot

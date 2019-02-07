@@ -1,0 +1,56 @@
+#!/bin/sh /etc/rc.common
+
+# enables the correct bitbanged spi and i2c device 
+
+#define RIOT_GPIO_MIXER_SPI_SS		26
+#define RIOT_GPIO_MIXER_SPI_SCK		11
+#define RIOT_GPIO_MIXER_SPI_MOSI	27
+#define RIOT_GPIO_MIXER_SPI_MISO	8
+#define RIOT_UNUSED	0
+
+#define RIOT_GPIO_LEDBOARD_1_SCK		22
+#define RIOT_GPIO_LEDBOARD_2_SDA		23
+#define RIOT_GPIO_LEDBOARD_3_GPIO		24
+
+#define RIOT_GPIO_GPS_RESET		6	// low to reset
+#define RIOT_GPIO_MIXER_RESET		18	// low to reset
+#define RIOT_GPIO_MIXER_LDO		21	// high to disable
+#define RIOT_GPIO_RF_ENABLE		7	// high to disable
+
+#define RIOT_GPIO_MIXER_MODE		21	// high to disable // UNUSED
+#define RIOT_GPIO_MIXER_ENABLE		7	// high to disable // UNUSED
+
+
+START=60
+
+start() {
+
+#<id>,<sck>,<mosi>,<miso>,<mode1>,<maxfreq1>,<cs1>,...  
+		# insmod spi-gpio-custom bus0=1,11,27,8,0,125000,26 - we're using bit banging 
+#<id>,<sda>,<scl>,<udelay>,<timeout>,<sda_od>,<scl_od>,<scl_oo>
+		insmod i2c-gpio-custom bus0=0,23,22
+		#gps off ( ensure it comes up agian next time )
+		echo 0 > /sys/class/gpio/gpio6/value
+		#RF switch on (L)
+		echo 0 > /sys/class/gpio/gpio7/value
+		#Mixer  on ( Mixer reset L )
+		echo 0 > /sys/class/gpio/gpio18/value
+		#Mixer Enable LOW
+		echo 0 > /sys/class/gpio/gpio19/value
+		#Mixer Mode control LOW
+		echo 0 > /sys/class/gpio/gpio20/value
+		#Mixer Mode LDO on (LOW )
+		echo 0 > /sys/class/gpio/gpio21/value
+		#gps on 
+		echo 1 > /sys/class/gpio/gpio6/value
+}
+
+stop(){
+#gps off ( ensure it comes up agian next time )
+	echo 0 > /sys/class/gpio/gpio6/value
+#RF switch off
+	echo 1 > /sys/class/gpio/gpio7/value
+#Mixer off
+	echo 1 > /sys/class/gpio/gpio21/value
+}
+

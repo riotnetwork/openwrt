@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Resolve differences between different GPIO configurations
+
+. /lib/ar71xx.sh
+ar71xx_board_detect
+case $AR71XX_BOARD_NAME in
+albatross)
+	GPIO_RF_ENABLE=17
+	GPIO_MIXER_RESET=18
+	GPIO_MIXER_ENABLE=19
+	GPIO_MIXER_MODE=20
+	GPIO_MIXER_LDO=21
+	GPIO_GPS_RESET=6
+
+	LED_BOOT_DONE="albatross:red:usb"
+	LED_RESET_BLINK="albatross:red:wlan"
+	LED_USER="albatross:red:wlan"
+	;;
+esac

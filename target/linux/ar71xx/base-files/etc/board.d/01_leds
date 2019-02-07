@@ -111,6 +111,11 @@ n5q)
 		;;
 	esac
 	;;
+albatross)
+	ucidef_set_led_wlan "wlan" "WLAN" "albatross:red:wlan" "phy0tpt"
+	ucidef_set_led_netdev "eth" "WAN" "albatross:red:eth" "eth0"
+	#ucidef_set_led_usbdev "usb1" "USB" "albatross:red:usb" "1-1"
+	;;
 archer-c25-v1)
 	ucidef_set_led_netdev "wan" "WAN" "$board:green:wan" "eth0"
 	ucidef_set_led_wlan "wlan" "WLAN" "$board:green:wlan2g" "phy1tpt"

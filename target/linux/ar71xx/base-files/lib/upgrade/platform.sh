@@ -346,6 +346,7 @@ platform_check_image() {
 	ap91-5g|\
 	ap96|\
 	arduino-yun|\
+	albatross|\
 	bhr-4grv2|\
 	bxu2000n-2-a1|\
 	db120|\
@@ -359,7 +360,7 @@ platform_check_image() {
 	zcn-1523h-2|\
 	zcn-1523h-5)
 		[ "$magic_long" != "68737173" -a "$magic_long" != "19852003" ] && {
-			echo "Invalid image type."
+			echo "Invalid image type. magic word is "$magic_long "expected 68737173 or 19852003"
 			return 1
 		}
 

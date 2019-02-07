@@ -85,6 +85,9 @@ get_status_led() {
 	tl-wr902ac-v1)
 		status_led="$board:green:power"
 		;;
+	albatross)
+		status_led="albatross:red:system"
+		;;
 	archer-c5|\
 	archer-c7|\
 	tl-mr10u|\

@@ -262,6 +262,9 @@ ar71xx_setup_interfaces()
 		ucidef_add_switch "switch0" \
 			"0@eth1" "1:lan:1" "2:lan:2" "3:lan:3" "4:lan:4"
 		;;
+	albatross)
+		ucidef_set_interface_lan "eth0"
+		;;
 	arduino-yun|\
 	dir-505-a1|\
 	tl-wa801nd-v3)

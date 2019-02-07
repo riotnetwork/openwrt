@@ -147,6 +147,17 @@ define Device/arduino-yun
 endef
 TARGET_DEVICES += arduino-yun
 
+define Device/albatross
+  DEVICE_TITLE := RIOT Albatross
+  DEVICE_PACKAGES := kmod-usb-core kmod-usb2
+  BOARDNAME := albatross
+  IMAGE_SIZE := 15936k
+  CONSOLE := ttyATH0,115200
+  MTDPARTS := spi0.0:256k(u-boot),64k(u-boot-env),15936k(firmware),64k(nvram),64k(art)
+  IMAGE/sysupgrade.bin = append-kernel $$$$(BLOCKSIZE)| pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs | append-metadata |  check-size $$$$(IMAGE_SIZE)
+endef
+TARGET_DEVICES += albatross
+
 define Device/bsb
   DEVICE_TITLE := Smart Electronics Black Swift board
   DEVICE_PACKAGES := kmod-usb-core kmod-usb2
