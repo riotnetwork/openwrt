@@ -2332,7 +2332,6 @@ CONFIG_PACKAGE_procd=y
 # CONFIG_PROCD_SHOW_BOOT is not set
 # CONFIG_PROCD_ZRAM_TMPFS is not set
 # CONFIG_PACKAGE_qos-scripts is not set
-# CONFIG_PACKAGE_reset-serial is not set
 # CONFIG_PACKAGE_resolveip is not set
 CONFIG_PACKAGE_rpcd=y
 # CONFIG_PACKAGE_rpcd-mod-file is not set
@@ -2342,7 +2341,6 @@ CONFIG_PACKAGE_rpcd=y
 # CONFIG_PACKAGE_sqm-scripts is not set
 # CONFIG_PACKAGE_sqm-scripts-extra is not set
 CONFIG_PACKAGE_swconfig=y
-# CONFIG_PACKAGE_uSDaemon is not set
 CONFIG_PACKAGE_ubox=y
 CONFIG_PACKAGE_ubus=y
 CONFIG_PACKAGE_ubusd=y
@@ -2351,8 +2349,6 @@ CONFIG_PACKAGE_ubusd=y
 CONFIG_PACKAGE_uci=y
 CONFIG_PACKAGE_usign=y
 # CONFIG_PACKAGE_wireless-tools is not set
-# CONFIG_PACKAGE_yun-conf is not set
-# CONFIG_PACKAGE_yun-scripts is not set
 # CONFIG_PACKAGE_zram-swap is not set
 
 #
@@ -2734,7 +2730,7 @@ CONFIG_PACKAGE_kmod-i2c-gpio-custom=y
 #
 # LED modules
 #
-# CONFIG_PACKAGE_kmod-leds-gpio is not set
+CONFIG_PACKAGE_kmod-leds-gpio=y
 # CONFIG_PACKAGE_kmod-leds-pca963x is not set
 # CONFIG_PACKAGE_kmod-leds-reset is not set
 # CONFIG_PACKAGE_kmod-ledtrig-default-on is not set
@@ -2943,7 +2939,7 @@ CONFIG_BATMAN_ADV_DAT=y
 # CONFIG_BATMAN_ADV_NC is not set
 CONFIG_BATMAN_ADV_MCAST=y
 # CONFIG_BATMAN_ADV_DEBUGFS is not set
-# CONFIG_BATMAN_ADV_DEBUG is not set
+CONFIG_BATMAN_ADV_DEBUG=y
 # CONFIG_BATMAN_ADV_TRACING is not set
 # CONFIG_PACKAGE_kmod-bonding is not set
 # CONFIG_PACKAGE_kmod-capi is not set
@@ -3342,8 +3338,6 @@ CONFIG_PACKAGE_lua=y
 #
 # Python
 #
-# CONFIG_PACKAGE_aws-iot-device-sdk is not set
-# CONFIG_PACKAGE_aws-iot-runtime-yun is not set
 # CONFIG_PACKAGE_chardet is not set
 # CONFIG_PACKAGE_django is not set
 # CONFIG_PACKAGE_django-appconf is not set
@@ -3398,7 +3392,6 @@ CONFIG_PACKAGE_lua=y
 # CONFIG_PACKAGE_python-ctypes is not set
 # CONFIG_PACKAGE_python-ctypes-src is not set
 # CONFIG_PACKAGE_python-curl is not set
-# CONFIG_PACKAGE_python-cwiid is not set
 # CONFIG_PACKAGE_python-dateutil is not set
 # CONFIG_PACKAGE_python-dateutil-src is not set
 # CONFIG_PACKAGE_python-db is not set
@@ -4501,7 +4494,6 @@ CONFIG_PACKAGE_libblobmsg-json=y
 # CONFIG_PACKAGE_libconfig is not set
 # CONFIG_PACKAGE_libcups is not set
 # CONFIG_PACKAGE_libcurl is not set
-# CONFIG_PACKAGE_libcwiid is not set
 # CONFIG_PACKAGE_libdaemon is not set
 # CONFIG_PACKAGE_libdaq is not set
 # CONFIG_PACKAGE_libdb47 is not set
@@ -4513,9 +4505,9 @@ CONFIG_PACKAGE_libblobmsg-json=y
 # CONFIG_PACKAGE_libdnet is not set
 # CONFIG_PACKAGE_libdouble-conversion is not set
 # CONFIG_PACKAGE_libdrm is not set
-# CONFIG_PACKAGE_libecdsautil is not set
 # CONFIG_PACKAGE_libedit is not set
 # CONFIG_PACKAGE_libelf is not set
+# CONFIG_PACKAGE_libecdsautil is not set
 # CONFIG_PACKAGE_libesmtp is not set
 # CONFIG_PACKAGE_libestr is not set
 # CONFIG_PACKAGE_libev is not set
@@ -4771,7 +4763,6 @@ CONFIG_PACKAGE_terminfo=y
 # CONFIG_PACKAGE_tinycdb is not set
 # CONFIG_PACKAGE_uclibcxx is not set
 # CONFIG_PACKAGE_uw-imap is not set
-# CONFIG_PACKAGE_v8m-rb is not set
 # CONFIG_PACKAGE_websocketpp is not set
 # CONFIG_PACKAGE_xmlrpc-c is not set
 # CONFIG_PACKAGE_xmlrpc-c-client is not set
@@ -4850,7 +4841,6 @@ CONFIG_PACKAGE_luci-mod-system=y
 # CONFIG_PACKAGE_luci-app-adblock is not set
 # CONFIG_PACKAGE_luci-app-advanced-reboot is not set
 # CONFIG_PACKAGE_luci-app-ahcp is not set
-# CONFIG_PACKAGE_luci-app-arduino-webpanel is not set
 # CONFIG_PACKAGE_luci-app-aria2 is not set
 # CONFIG_PACKAGE_luci-app-attendedsysupgrade is not set
 # CONFIG_PACKAGE_luci-app-banip is not set
@@ -5202,6 +5192,8 @@ CONFIG_POSTFIX_PCRE=y
 # Firewall
 #
 # CONFIG_PACKAGE_arptables is not set
+# CONFIG_PACKAGE_conntrack is not set
+# CONFIG_PACKAGE_conntrackd is not set
 # CONFIG_PACKAGE_ebtables is not set
 # CONFIG_PACKAGE_fwknop is not set
 # CONFIG_PACKAGE_fwknopd is not set
@@ -5991,14 +5983,11 @@ CONFIG_PACKAGE_ppp-mod-pppoe=y
 # CONFIG_PACKAGE_socat is not set
 # CONFIG_PACKAGE_softflowd is not set
 # CONFIG_PACKAGE_soloscli is not set
-# CONFIG_PACKAGE_spacebrew is not set
-# CONFIG_PACKAGE_spectrum-scan-manager is not set
 # CONFIG_PACKAGE_spoofer is not set
 # CONFIG_PACKAGE_stunnel is not set
 # CONFIG_PACKAGE_tayga is not set
 # CONFIG_PACKAGE_tcpdump is not set
 # CONFIG_PACKAGE_tcpdump-mini is not set
-# CONFIG_PACKAGE_temboo is not set
 # CONFIG_PACKAGE_tgt is not set
 # CONFIG_PACKAGE_tor is not set
 # CONFIG_PACKAGE_tor-fw-helper is not set
@@ -6311,7 +6300,6 @@ CONFIG_PACKAGE_mixer=y
 # CONFIG_PACKAGE_adb is not set
 # CONFIG_PACKAGE_ap51-flash is not set
 # CONFIG_PACKAGE_at is not set
-# CONFIG_PACKAGE_avrdude-yun is not set
 # CONFIG_PACKAGE_bandwidthd is not set
 # CONFIG_PACKAGE_bandwidthd-pgsql is not set
 # CONFIG_PACKAGE_bandwidthd-php is not set
@@ -6323,7 +6311,6 @@ CONFIG_PACKAGE_mixer=y
 # CONFIG_PACKAGE_bluez-examples is not set
 # CONFIG_PACKAGE_bluez-utils is not set
 # CONFIG_PACKAGE_bonniexx is not set
-# CONFIG_PACKAGE_bossa is not set
 # CONFIG_PACKAGE_bsdiff is not set
 # CONFIG_PACKAGE_bspatch is not set
 # CONFIG_PACKAGE_cal is not set
@@ -6332,7 +6319,6 @@ CONFIG_PACKAGE_mixer=y
 # CONFIG_PACKAGE_coap-client is not set
 # CONFIG_PACKAGE_collectd is not set
 # CONFIG_PACKAGE_coreutils is not set
-# CONFIG_PACKAGE_cpu-mcu-bridge is not set
 # CONFIG_PACKAGE_crconf is not set
 # CONFIG_PACKAGE_crelay is not set
 # CONFIG_PACKAGE_csstidy is not set
@@ -6474,7 +6460,6 @@ CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_smartmontools is not set
 # CONFIG_PACKAGE_smstools3 is not set
 # CONFIG_PACKAGE_sockread is not set
-# CONFIG_PACKAGE_spectral-scan-webgui is not set
 # CONFIG_PACKAGE_spi-tools is not set
 # CONFIG_PACKAGE_spidev-test is not set
 # CONFIG_PACKAGE_strace is not set
@@ -6510,7 +6495,6 @@ CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_watchcat is not set
 # CONFIG_PACKAGE_whereis is not set
 # CONFIG_PACKAGE_wifitoggle is not set
-# CONFIG_PACKAGE_wminput is not set
 # CONFIG_PACKAGE_xsltproc is not set
 # CONFIG_PACKAGE_xxd is not set
 # CONFIG_PACKAGE_yanglint is not set
@@ -6525,4 +6509,3 @@ CONFIG_PACKAGE_libjson-script=y
 # font-utils
 #
 # CONFIG_PACKAGE_fontconfig is not set
-CONFIG_OVERRIDE_PKGS="luci-app-gpsd"

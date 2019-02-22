@@ -387,12 +387,11 @@ define Device/Init
 endef
 
 DEFAULT_DEVICE_VARS := \
-  DEVICE_NAME KERNEL KERNEL_INITRAMFS KERNEL_SIZE KERNEL_INITRAMFS_IMAGE \
-  KERNEL_LOADADDR DEVICE_DTS DEVICE_DTS_CONFIG DEVICE_DTS_DIR BOARD_NAME \
-  CMDLINE UBOOTENV_IN_UBI KERNEL_IN_UBI \
-  BLOCKSIZE PAGESIZE SUBPAGESIZE VID_HDR_OFFSET \
-  UBINIZE_OPTS UIMAGE_NAME UBINIZE_PARTS \
-  SUPPORTED_DEVICES IMAGE_METADATA
+  DEVICE_NAME KERNEL KERNEL_INITRAMFS KERNEL_INITRAMFS_IMAGE KERNEL_SIZE \
+  CMDLINE UBOOTENV_IN_UBI KERNEL_IN_UBI BLOCKSIZE PAGESIZE SUBPAGESIZE \
+  VID_HDR_OFFSET UBINIZE_OPTS UBINIZE_PARTS MKUBIFS_OPTS DEVICE_DTS \
+  DEVICE_DTS_CONFIG DEVICE_DTS_DIR BOARD_NAME UIMAGE_NAME SUPPORTED_DEVICES \
+  IMAGE_METADATA KERNEL_ENTRY KERNEL_LOADADDR
 
 define Device/ExportVar
   $(1) : $(2):=$$($(2))
@@ -608,7 +607,7 @@ define BuildImage
 		$(call Image/Prepare)
 
     legacy-images-prepare-make: image_prepare
-		$(MAKE) legacy-images-prepare
+		$(MAKE) legacy-images-prepare BIN_DIR="$(BIN_DIR)"
 
   else
     image_prepare:
@@ -632,7 +631,7 @@ define BuildImage
 
   legacy-images-make: install-images
 	$(call Image/mkfs/ubifs/legacy)
-	$(MAKE) legacy-images
+	$(MAKE) legacy-images BIN_DIR="$(BIN_DIR)"
 
   install: install-images
 	$(call Image/Manifest)

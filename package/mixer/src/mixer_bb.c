@@ -20,6 +20,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <time.h>
 #include <sys/ioctl.h>
 #include <linux/ioctl.h>
@@ -31,16 +32,30 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 /*GPIO bit banging */
-#define GPIO_ADDR 0x18040000 // base address
-#define GPIO_BLOCK 48 // memory block size
 
-#define RESET_REGSITER_ADDR 0x18060000 // base address for bootstrap register
-#define BOOTSRTAP_GPIO_OFFSET 0xAC
-#define BOOTSRTAP_GPIO_ADDR 0x180600AC
-#define BOOTSRTAP_BLOCK 176 // memory block size
+#define PAGE_SIZE   4096        
+#define BLOCK_SIZE PAGE_SIZE
 
-volatile unsigned long *gpioAddress;
-volatile unsigned long *bootGpioAddress;
+#define AR71XX_APB_BASE         0x18000000
+#define AR71XX_GPIO_BASE        (AR71XX_APB_BASE + 0x00040000)
+
+#define AR71XX_GPIO_REG_OE		0
+#define AR71XX_GPIO_REG_IN 		1  //for get value, ????? out status?
+#define AR71XX_GPIO_REG_OUT		2
+#define AR71XX_GPIO_REG_SET		3
+#define AR71XX_GPIO_REG_CLEAR		4
+
+#define AR71XX_GPIO_REG_INT_MODE	0x14
+#define AR71XX_GPIO_REG_INT_TYPE	0x18
+#define AR71XX_GPIO_REG_INT_POLARITY	0x1c
+#define AR71XX_GPIO_REG_INT_PENDING	0x20
+#define AR71XX_GPIO_REG_INT_ENABLE	0x24
+#define AR71XX_GPIO_REG_FUNC	0x28
+
+int  mem_fd     = 0;
+char *gpio_mmap = NULL;
+char *gpio_ram  = NULL;
+volatile unsigned int *gpio = NULL;
 
 /**************MIXER register map********************/
 #define	LF  0
@@ -173,101 +188,47 @@ unsigned int log2_int( unsigned int x )
   return ans ;
 }
 
-static void pabort(const char *s)
-{
-	perror(s);
-	abort();
-}
-
-/* Call gpioDirection(27, 1) to set GPIO27 as output. */
-int gpioSetup()
-{
-    int  m_mfd;
-    if ((m_mfd = open("/dev/mem", O_RDWR)) < 0)
-    {
-        return -1;
-    }
-	gpioAddress = (unsigned long*)mmap(NULL, GPIO_BLOCK, PROT_READ|PROT_WRITE, MAP_SHARED, m_mfd, GPIO_ADDR);
-close(m_mfd);
-
-    if (gpioAddress == MAP_FAILED)
-    {
-        return -2;
-    }
-
-    return 0;
-}
-
- //Call gpioDirection(27, 1) to set GPIO27 as output. 
-int mdioGpioSetup()
-{
-    int  m_mfd_mdio;
-printf("mdioGpioSetup : opening dev/mem\n");
-    if ((m_mfd_mdio = open("/dev/mem", O_RDWR)) < 0)
-    {
-        return -1;
-    }
-printf("mapping addr\n");
-	bootGpioAddress = (unsigned long*)mmap(NULL, BOOTSRTAP_BLOCK, PROT_READ|PROT_WRITE, MAP_SHARED, m_mfd_mdio, RESET_REGSITER_ADDR);
-
-close(m_mfd_mdio);
-
-    if (bootGpioAddress == MAP_FAILED)
-    {
-        return -2;
-    }
-
-    return 0;
-}
-
- void enableMDIOgpio()
-{
- 	unsigned long value = *(bootGpioAddress + BOOTSRTAP_GPIO_OFFSET ); // obtain current settings of register
-
-	if( (value & (1 << 18)) ){ // test bit 18
-		printf("GPIO 26 and 27 are in GPIO mode\n");
-	}
-	else{
-		printf("setting GPIO 26 and 27 to GPIO mode\n");
- 		value |= (1 << 18); // set bit 18 to 1 ( set gpio 26 and 27 in gpio mode )
-		*(bootGpioAddress + BOOTSRTAP_GPIO_OFFSET) = value;
-	}	
-}
-
-    
-
 // Read GPIO state
-int gpioRead(int gpio)
+int gpioRead(int pin)
 {
-    unsigned long value = *(gpioAddress + 1);
-    return (value & (1 << gpio));
+    unsigned long value = *(gpio + AR71XX_GPIO_REG_IN);
+    return (value & (1 << pin));
 }
 
 // set GPIO state
-void gpioSet(int gpio, int value)
+void gpioSet(unsigned int pin, unsigned int state)
 {
-    if (value == 0)
+    if (state == 0)
     {
-        *(gpioAddress + 4) = (1 << gpio);
+        *(gpio + AR71XX_GPIO_REG_CLEAR) = (1 << pin);
     }
     else
     {
-        *(gpioAddress + 3) = (1 << gpio);
+        *(gpio + AR71XX_GPIO_REG_SET) = (1 << pin);
     }
 }
-//set GPIO direction
-void gpioDirection(int gpio, int direction)
+
+#define AR71XX_GPIO_REG_OE		0
+#define AR71XX_GPIO_REG_IN 		1  //for get value, ????? out status?
+#define AR71XX_GPIO_REG_OUT		2
+#define AR71XX_GPIO_REG_SET		3
+#define AR71XX_GPIO_REG_CLEAR		4
+
+//set GPIO direction : /* Call gpioDirection(27, 1) to set GPIO27 as output. */
+void gpioDirection(unsigned int pin, unsigned int state)
 {
-    unsigned long value = *(gpioAddress + 0); // obtain current settings
-    if (direction == 1)
+   // unsigned long value = *(gpio + AR71XX_GPIO_REG_OE); // obtain current settings
+
+    if (state)
     {
-        value |= (1 << gpio); // set bit to 1
+        *(gpio+AR71XX_GPIO_REG_OE) |= (1 << pin); // set bit to 1 ( set as output )
     }
     else
     {
-        value &= ~(1 << gpio); // clear bit
+        *(gpio+AR71XX_GPIO_REG_OE) &= ~(1 << pin); // clear bit ( set at input )
     }
-    *(gpioAddress + 0) = value;
+
+   // *(gpio + AR71XX_GPIO_REG_OE) = value;
 }
 
 
@@ -280,63 +241,6 @@ static uint16_t lo_freq_MHz = 0; /*mixer LO frequency in MHz*/
 static uint8_t defaultConfig = 0;
 
 char *input_tx;
-
-static void hex_dump(const void *src, size_t length, size_t line_size,
-		     char *prefix)
-{
-	int i = 0;
-	const unsigned char *address = src;
-	const unsigned char *line = address;
-	unsigned char c;
-
-	printf("%s | ", prefix);
-	while (length-- > 0) {
-		printf("%02X ", *address++);
-		if (!(++i % line_size) || (length == 0 && i % line_size)) {
-			if (length == 0) {
-				while (i++ % line_size)
-					printf("__ ");
-			}
-			printf(" | ");  /* right close */
-			while (line < address) {
-				c = *line++;
-				printf("%c", (c < 33 || c == 255) ? 0x2E : c);
-			}
-			printf("\n");
-			if (length > 0)
-				printf("%s | ", prefix);
-		}
-	}
-}
-
-/*
- *  Unescape - process hexadecimal escape character
- *      converts shell input "\x23" -> 0x23
- */
-static int unescape(char *_dst, char *_src, size_t len)
-{
-	int ret = 0;
-	int match;
-	char *src = _src;
-	char *dst = _dst;
-	unsigned int ch;
-
-	while (*src) {
-		if (*src == '\\' && *(src+1) == 'x') {
-			match = sscanf(src + 2, "%2x", &ch);
-			if (!match)
-				pabort("malformed input string");
-
-			src += 4;
-			*dst++ = (unsigned char)ch;
-		} else {
-			*dst++ = *src++;
-		}
-		ret++;
-	}
-	return ret;
-}
-
 
 /*Dend data to device*/
 static void transfer( uint32_t data )
@@ -591,28 +495,7 @@ static void calcMixerPrescalers(uint16_t lo_freq_MHz_local){
 
 		px_freq2 = nummsb; 	// N-divider numerator value, most significant 16 bits
 		px_freq3 = numlsb<<8; 	// N divider numerator value, least significant 8 bits
-
-/*		
-		printf("nlo: %d\n", nlo);
-		printf("lodiv: %d\n", lodiv);
-		printf("iodiv_flag: 0x%x\n", iodiv_flag);
-		printf("fvco: %f\n", fvco);
-		printf("ndiv: %f\n", ndiv);
-		printf("fbdiv: %d\n", fbkdiv);
-		printf("fbdiv_flag: 0x%x\n", fbkdiv_flag);
-		printf("n: 0x%x\n", fn);
-		printf("nummsb: %d\n", nummsb);
-		printf("numlsb: %d\n", numlsb);
-
-		printf("n shift: 0x%x\n", (uint16_t)(fn << 7));
-		printf("lodiv flag shift: 0x%x\n", (uint16_t)((iodiv_flag) << 4));
-		printf("fbdiv flag  shift: 0x%x\n", (uint16_t)((fbkdiv_flag ) << 2));
-		
-		printf("LO set to: %d\n", lo_freq_MHz);
-		printf("px_freq1: 0x%x\n", px_freq1); // 1218
-		printf("px_freq2: 0x%x\n", px_freq2);
-		printf("px_freq3: 0x%x\n", px_freq3);
-*/		
+	
 		printf("LO set to: %d MHz\n", lo_freq_MHz_local);
 
 }
@@ -674,24 +557,43 @@ int main(int argc, char *argv[])
 
 
 	
-	// set GPIO
-	printf("GPIO setup \n");
-	ret = gpioSetup(); //  get GPIO memory map,
-	if(ret <0){
-	 	pabort("couldnt setup GPIO mmap, do you have /dev/mem ?\n");
+	// set GPIO ( mmap )
+	getpagesize();
+	/* open /dev/mem to get acess to physical ram */
+	if ((mem_fd = open("/dev/mem", O_RDWR) ) < 0) {
+		printf("can't open /dev/mem. Did you run the program with administrator rights?\n");
+		exit (-1);
 	}
-/*
-	sleep(500);
-
-	printf("MDIO GPIO setup \n");
-	ret = mdioGpioSetup();
-	if(ret <0){
-	 	pabort(" couldnt setup MDIO GPIO mmap, do you have /dev/mem ?\n");
+	/* Allocate a block of virtual RAM in our application's address space */
+	if ((gpio_ram = malloc(BLOCK_SIZE + (PAGE_SIZE-1))) == NULL) {
+		printf("allocation error \n");
+		exit (-1);
 	}
-	printf("MDIO GPIO enable \n");
-	enableMDIOgpio();
 
-*/
+	if ((unsigned long)gpio_ram % PAGE_SIZE)
+		gpio_ram += PAGE_SIZE - ((unsigned long)gpio_ram % PAGE_SIZE);
+
+
+	gpio_mmap = (unsigned char *)mmap(
+		(void *)gpio_ram,
+		BLOCK_SIZE,
+		PROT_READ|PROT_WRITE,
+		MAP_SHARED,
+		mem_fd,
+		AR71XX_GPIO_BASE
+	);
+
+	//memread_memory(gpio_mmap, 16, 4);
+	if ((long)gpio_mmap < 0) {
+		printf("unable to map the memory. Did you run the program with administrator rights?\n");
+		exit (-1);
+	}
+	/* Always use a volatile pointer to hardware registers */
+	gpio = (volatile unsigned *)gpio_mmap;	
+
+
+
+
 /*set GPIO drive directions*/
 	//gpioDirection(RIOT_GPIO_RF_ENABLE, 1) ;	//OUTPUT	
 	gpioDirection(RIOT_GPIO_MIXER_RESET, 1) ;	//OUTPUT
@@ -716,6 +618,7 @@ int main(int argc, char *argv[])
 	gpioSet(RIOT_GPIO_MIXER_SPI_SS, 1);	// Mixer SS / ENx
 	gpioSet(RIOT_GPIO_MIXER_SPI_SCK, 0);	// Mixer SCK
 	gpioSet(RIOT_GPIO_MIXER_SPI_MOSI, 0);	// Mixer MOSI
+
 /*enable the mixer*/
 	gpioSet(RIOT_GPIO_MIXER_RESET, 1);	// Mixer Active ( H )
 
@@ -728,5 +631,9 @@ int main(int argc, char *argv[])
 	printf("Custom\n");
 		setMixerCustom( );
 	}
+
+	close (mem_fd);
+	free(gpio_ram);
+
 	return ret;
 }
