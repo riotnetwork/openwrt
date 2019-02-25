@@ -47,7 +47,7 @@
 	gpio-export {
  		compatible = "gpio-export";
 		pinctrl-names = "default";
-		pinctrl-0 = <&mdio_gpio>;
+		pinctrl-0 = <&mdio_gpio &jtag_disable_pins &jumpstart_disable>;
 
 		gpio_GPS_reset {
 			gpio-export,name = "GPS-Reset";

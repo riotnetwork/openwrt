@@ -13,12 +13,13 @@ LOWEST_UHF=21		# cannot set to channels lower than this
 HIGHEST_UHF=48
 UHF_OFFSET=20	 	# we start at UHF channel 21
 
-# gain settings for atheros to have a constant-ish output - channel 21 .. 48
+# gain settings for atheros to have a constant-ish output - channel 21 .. 48 // unused for now
 GAINARRAY=" 4 4 4 4 5 4 4 4 3 3 3 3 3 7 7 7 7 5 3 3 2 1 1 1 1 2 2 2 " 
 
-# mixer settings for atheros to have a constant channel (7) setting - channel 21 .. 46 - Standard Wifi configuration
+# mixer settings for atheros to have a constant channel (7, 2442 MHz) setting - channel 21 .. 48 - Standard Wifi configuration
 MIXERARRAY="1968 1960 1952 1944 1936 1928 1920 1912 1904 1896 1888 1880 1872 1864 1856 1848 1840 1832 1824 1816 1808 1800 1792 1784 1776 1768 1760 1752" 
 CONSTCHANNEL=7
+CONSTCHANNELFREQ=2442
 CONSTGAIN=1
 
 
@@ -48,32 +49,63 @@ vary_mixer_for_Channel()
 }
 
 
+get_UHF_Freq()
+{
+	local UHFFreq	
+		#calculate the UHF cnahhel frequency based on mixer value and constant channel frequency
+	UHFFreq=`expr $CONSTCHANNELFREQ - $1`
+	# "return"
+	echo $UHFFreq
+}
+
+
+
 ## body /"main" of script
 
-#some utility functions
-
+# check that we got an input
 if [ $# -lt 1 ]
 then
   echo "Usage: $0 [channel no 21..48]"
   exit 1
 fi
+# check that input was valid
+#if [[ ! $1 || $1 = *[^0-9]* ]]; then
+#    echo "Error: '$1' is not a number." >&2
+#    exit 1
+#fi
+
+if [ $1 -lt $LOWEST_UHF ];then 
+		>&2 echo "$1 is not a valid channel ($LOWEST_UHF .. $HIGHEST_UHF)"
+elif [ $1 -gt $HIGHEST_UHF ];then 
+		>&2 echo "$1 is not a valid channel ($LOWEST_UHF .. $HIGHEST_UHF)"
+else :
+
 	MIXER_SETTING=$(vary_mixer_for_Channel $1)
 	WIFI_SETTING=$CONSTCHANNEL
 	WIFI_POWER=$CONSTGAIN
-	echo  "UHF channel $1: Mixer: $MIXER_SETTING, Wifi channel: $WIFI_SETTING, Wifi power: $WIFI_POWER"
+	UHFFREQ=$(get_UHF_Freq $MIXER_SETTING)
 
+	echo  "UHF channel $1: Mixer: $MIXER_SETTING MHz, Wifi channel: $WIFI_SETTING, UHF Freq: $UHFFREQ MHz"
+
+## mixer settings
 	uci set mixer.@mixer[0].freq=$MIXER_SETTING
 	uci set mixer.@mixer[0].UHFChan=$1
+	uci set mixer.@mixer[0].UHFFreq=$UHFFREQ
+
+## Wifi radio settings
 	uci set wireless.radio0.chanbw=5
 	uci set wireless.radio0.txpower=$WIFI_POWER
 	uci set wireless.radio0.channel=$WIFI_SETTING
+
+## commit changes to disk 
 	uci commit
+
+## relaod/restart relevant services
 	/etc/init.d/mixer reload
 	/etc/init.d/network reload
-
+fi
 ## set mixer LO
 #uci set mixer.@mixer[0].freq='1918' # lower 13 channels
-#uci set mixer.@mixer[0].freq='1814' # upper 13 channels
 
 ## set wifi settings
 #uci set wireless.radio0.chanbw='5'

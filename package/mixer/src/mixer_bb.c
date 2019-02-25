@@ -50,12 +50,12 @@
 #define AR71XX_GPIO_REG_INT_POLARITY	0x1c
 #define AR71XX_GPIO_REG_INT_PENDING	0x20
 #define AR71XX_GPIO_REG_INT_ENABLE	0x24
-#define AR71XX_GPIO_REG_FUNC	0x28
+#define AR71XX_GPIO_REG_FUNC		0x28
 
 int  mem_fd     = 0;
 char *gpio_mmap = NULL;
 char *gpio_ram  = NULL;
-volatile unsigned int *gpio = NULL;
+volatile unsigned long *gpio = NULL;
 
 /**************MIXER register map********************/
 #define	LF  0
@@ -116,7 +116,7 @@ volatile unsigned int *gpio = NULL;
 
 /****************** GPIO ************************/
 #define RIOT_GPIO_MIXER_SPI_SS		26
-#define RIOT_GPIO_MIXER_SPI_SCK		11 // works in ATH79
+#define RIOT_GPIO_MIXER_SPI_SCK		11 
 #define RIOT_GPIO_MIXER_SPI_MOSI	27
 #define RIOT_GPIO_MIXER_SPI_MISO	8
 
@@ -138,6 +138,15 @@ static uint16_t px_freq2 = Px_FREQ2_DEFAULT;
 static uint16_t px_freq3 = Px_FREQ3_DEFAULT;
 static uint16_t ct_calx  = CT_CALx_DEFAULT;
 static uint16_t mix_cont  = MIX_CONT_DEFAULT;
+
+static uint32_t speed = 50000;
+static uint16_t delay = 1000;
+static int verbose;
+static uint8_t linearity = 0; /*mixer Linearity 1-7*/
+static uint16_t lo_freq_MHz = 0; /*mixer LO frequency in MHz*/
+static uint8_t defaultConfig = 0;
+
+char *input_tx;
 
 //  Mixer setup blurt :  LO is at 1918 MHz
 
@@ -208,12 +217,6 @@ void gpioSet(unsigned int pin, unsigned int state)
     }
 }
 
-#define AR71XX_GPIO_REG_OE		0
-#define AR71XX_GPIO_REG_IN 		1  //for get value, ????? out status?
-#define AR71XX_GPIO_REG_OUT		2
-#define AR71XX_GPIO_REG_SET		3
-#define AR71XX_GPIO_REG_CLEAR		4
-
 //set GPIO direction : /* Call gpioDirection(27, 1) to set GPIO27 as output. */
 void gpioDirection(unsigned int pin, unsigned int state)
 {
@@ -233,14 +236,7 @@ void gpioDirection(unsigned int pin, unsigned int state)
 
 
 
-static uint32_t speed = 50000;
-static uint16_t delay = 1000;
-static int verbose;
-static uint8_t linearity = 0; /*mixer Linearity 1-7*/
-static uint16_t lo_freq_MHz = 0; /*mixer LO frequency in MHz*/
-static uint8_t defaultConfig = 0;
 
-char *input_tx;
 
 /*Dend data to device*/
 static void transfer( uint32_t data )
@@ -574,7 +570,7 @@ int main(int argc, char *argv[])
 		gpio_ram += PAGE_SIZE - ((unsigned long)gpio_ram % PAGE_SIZE);
 
 
-	gpio_mmap = (unsigned char *)mmap(
+	gpio_mmap = (unsigned long *)mmap(
 		(void *)gpio_ram,
 		BLOCK_SIZE,
 		PROT_READ|PROT_WRITE,
@@ -589,7 +585,7 @@ int main(int argc, char *argv[])
 		exit (-1);
 	}
 	/* Always use a volatile pointer to hardware registers */
-	gpio = (volatile unsigned *)gpio_mmap;	
+	gpio = (volatile unsigned long*)gpio_mmap;	
 
 
 
