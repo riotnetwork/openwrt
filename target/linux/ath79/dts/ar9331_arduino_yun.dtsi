@@ -1,0 +1,229 @@
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+#include "ar9331.dtsi"
+/*
+
+ar9331 GPIO : function
+26	: bitbang SPI SS
+27	: bitbang SPI MOSI
+8	: bitbang SPI MISO
+11	: bitbang SPI SCK
+21	: SPI level shifter enable
+19	: AVR handsake signal ( has 10k pullup )
+6	: GP6 on pcb
+22	: handshake and GP6 level shifter enable
+23	: UART level shifter enable
+18 	: AVR reset
+20	: configuration button
+1	: LED0 : Wireless LED (blue)
+0	: LED1 : USB/System Led (White)
+17	: LED6 : WAN led (yellow)
+*/
+/ {
+	model = "Arduino Yun";
+	compatible = "yun", "qca,ar9331";
+
+	aliases {
+		serial0 = &uart;
+		led-boot = &led_system;
+		led-failsafe = &led_system;
+		led-running = &led_system;
+		led-upgrade = &led_system;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&switch_led_pins>;
+
+		led_system: system {
+			label = "arduino:white:usb";
+			gpios = <&gpio 1 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+
+ 		wlan {
+                         label = "arduino:blue:wlan";
+                         gpios = <&gpio 0 GPIO_ACTIVE_HIGH>;
+                         default-state = "off";
+			 linux,default-trigger = "phy0tpt";
+                };
+ 
+            	lan {
+                         label = "arduino:yellow:wan";
+                         gpios = <&gpio 17 GPIO_ACTIVE_LOW>; 
+                         default-state = "off";
+                };
+	
+	};
+	keys {
+		compatible = "gpio-keys-polled";
+		poll-interval = <20>;
+
+		button0 {
+			label = "configuration button";
+			linux,code = <KEY_WPS_BUTTON>;
+			gpios = <&gpio 20 GPIO_ACTIVE_LOW>;
+		};
+ 
+	};
+
+	gpio-export {
+ 		compatible = "gpio-export";
+		pinctrl-names = "default";
+		pinctrl-0 = <&mdio_gpio>; // needed for GPIO 26 and 27 
+
+		gpio_DS2_OE_1 { // Put the avr reset to high ( was used on older boards, new ones use 18 )
+			gpio-export,name = "DS2_OE-1";
+			gpio-export,output = <0>; // init low
+			gpio-export,direction_may_change;
+			gpios = <&gpio 7 GPIO_ACTIVE_HIGH>;
+		};
+
+		gpio_level_shifter { // enable OE of level shifter ( SPI )
+			gpio-export,name = "OE-1";
+			gpio-export,output = <0>; // init low = disabled
+			gpio-export,direction_may_change;
+			gpios = <&gpio 21 GPIO_ACTIVE_HIGH>;
+		};
+
+		gpio_OE2 { 	// enable OE of level shifter ( handshake )
+			gpio-export,name = "OE-2";
+			gpio-export,output = <0>; // init low = disabled
+			gpio-export,direction_may_change;
+			gpios = <&gpio 22 GPIO_ACTIVE_HIGH>;
+		};
+
+		gpio_uart_en { // enable level shifter ( UART )
+			gpio-export,name = "UART-ENA";
+			gpio-export,output = <0>; // init low = enabled
+			gpio-export,direction_may_change;
+			gpios = <&gpio 23 GPIO_ACTIVE_HIGH>;
+		};
+		
+		gpio_avr_reset { // AVR reset 
+			gpio-export,name = "AVR-RESET";
+			gpio-export,output = <0>; // init low ( AVR running normally - take High to Reset)
+			gpio-export,direction_may_change;
+			gpios = <&gpio 18 GPIO_ACTIVE_HIGH>;
+		};
+
+		gpio_handshake { // AVR handshake signal 
+			gpio-export,name = "AVR-Handshake";
+			gpio-export,output = <0>; // init low ( AVR running normally - take High to Reset)
+			gpio-export,direction_may_change;
+			gpios = <&gpio 19 GPIO_ACTIVE_HIGH>;
+		};
+
+		gpio_gpio6 { // AVR reset (take High to Reset)
+			gpio-export,name = "GPIO6";
+			gpio-export,output = <1>; // init high (has external 10k pullup )
+			gpio-export,direction_may_change;
+			gpios = <&gpio 6 GPIO_ACTIVE_HIGH>;
+		};
+
+
+	};
+
+};
+
+&chosen {
+	bootargs = "console=ttyATH0,250000"; // arduino uses 250000 baud, possibly for "bridge" library to exchange data between AVR and Linux
+};
+
+&ref {
+	clock-frequency = <25000000>;
+};
+
+&uart {
+	status = "okay";
+};
+
+&gpio {
+	status = "okay";
+};
+
+&usb {
+	dr_mode = "host";
+	status = "okay";
+};
+
+&usb_phy {
+	status = "okay";
+};
+
+&spi {
+	num-chipselects = <1>;
+	status = "okay";
+
+	/* Winbond 25Q128FVSG SPI flash */
+	flash@0 {
+		compatible = "jedec,spi-nor";
+		spi-max-frequency = <104000000>;
+		reg = <0>;
+		partitions {
+                          compatible = "fixed-partitions";
+                          #address-cells = <1>;
+                          #size-cells = <1>;
+  
+                          partition@0 {
+                                  label = "u-boot";
+                                  reg = <0x000000 0x040000>;
+                                  read-only;
+                          };
+  
+                          partition@1 {
+                                  label = "u-boot-env";
+                                  reg = <0x040000 0x010000>;
+                          };
+  
+                          partition@2 {
+                                  label = "firmware";
+                                  reg = <0x050000 0xfa0000>;
+                          };
+  
+                          art: partition@3 {
+                                  label = "ART";
+                                  reg = <0xff0000 0x010000>;
+                                  read-only;
+                          };
+                  };
+	};
+};
+
+
+&eth0 {
+	// ETH0 ( wired ) gets MAC adress from art partition, modified : mac[3] |= 0x08; 
+	// we cannot |=08  in dt, so we just increment by 1 so its different from wlan
+	status = "okay";
+	mtd-mac-address = <&art 0x1002>;
+	mtd-mac-address-increment-byte = <3>;
+	mtd-mac-address-increment = <(-1)>;
+};
+
+&eth1 {
+	// ETH1 ( wired into switch but not present on PCB ) gets MAC adress from art partition, modified mac[3] &= 0xF7;
+	// this port is not used at all on Yun
+	status = "okay";
+	//mtd-mac-address = <&art 0>;
+	//mtd-mac-address-increment-byte = <3>;
+	//mtd-mac-address-increment = <1>;
+};
+
+&wmac {
+	// wmac ( wireless ) gets MAC adress from ART partition unmolested
+	status = "okay";
+	mtd-cal-data = <&art 0x1000>;
+	mtd-mac-address = <&art 0x1002>;
+};
+
+&switch_led_pins{
+	// disable switch controlled LEDs to use them as regular GPIO (13,14,15,16) ,  <offset value mask>;
+	pinctrl-single,bits = <0x0 0x0 0xf8>;
+};
+
+
