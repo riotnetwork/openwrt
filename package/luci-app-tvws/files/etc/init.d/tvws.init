@@ -3,7 +3,8 @@
 # and here : https://joostoostdijk.com/posts/service-configuration-with-procd/
 START=95
 USE_PROCD=1
-PROG=/usr/sbin/mixer
+PROG=/usr/sbin/tvws
+PROCD_DEBUG=1
 
 section_enabled() {
 	config_get_bool enabled "$1" 'enabled' 0
@@ -12,8 +13,7 @@ section_enabled() {
 
 start_instance() {
 	local cfg="$1"
-	local freq
-	local linear
+	local UHFChan
 
 # The config_get procedure takes at least three arguments:
 #    Name of a variable to store the retrieved value in
@@ -22,14 +22,14 @@ start_instance() {
 #    Default (optional), value to return instead if option is unset
 
 	config_get_bool enabled "$cfg" 'enabled' 0
-	config_get freq "$cfg" 'freq' 1968
-	config_get linear "$cfg" 'linear' 5
+	config_get UHFChan "$cfg" 'UHFChan' 21
+
 
 # if 'enabled' wasnt set then we exit, nothing to do further for this instance
 	[ $enabled -gt 0 ] || return 1
 
 	procd_open_instance
-	procd_set_param command $PROG --freq $freq --linear $linear
+	procd_set_param command "$PROG $UHFChan"
 	# Send stdout/stderr output to the system log
 	# Use command logread to see the log
 	procd_set_param stderr 1
@@ -45,22 +45,23 @@ stop_instance() {
 
 # "main" entry point
 start_service() {
-	#load the config file ( /etc/config/mixer )
-	config_load 'mixer'
+	#load the config file ( /etc/config/tvws )
+	procd_set_param file /etc/config/tvws reload # will restart the daemon if these files have changed
+	config_load 'tvws'
 	#for each "instance" of a mixer config in teh file, run the "start" instrance script
 	# one would hav eto pass each call a reference to the specific instance in the config so that they all get their own settings applied
-	config_foreach start_instance 'mixer'
+	config_foreach start_instance 'tvws'
 }
 
 # This is not neccessary here, we only have 1 instance of the mixer..
 # but we include it for the sake of the example
 stop_service() {
-	config_load 'mixer'
-	config_foreach stop_instance 'mixer'
+	config_load 'tvws'
+	config_foreach stop_instance 'tvws'
 }
 
 service_triggers()
 {
 # if /etc/config/mixer changes we reload the application/instance
-	procd_add_reload_trigger "mixer"
+	procd_add_reload_trigger "tvws"
 }

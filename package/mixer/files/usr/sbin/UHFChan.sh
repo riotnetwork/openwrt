@@ -88,8 +88,10 @@ else :
 	echo  "UHF channel $1: Mixer: $MIXER_SETTING MHz, Wifi channel: $WIFI_SETTING, UHF Freq: $UHFFREQ MHz"
 
 ## mixer settings
+ 	uci set mixer.@mixer[0].UHFChan=$1 ## this cript GETS UHF channel information from the mixer config
+
 	uci set mixer.@mixer[0].freq=$MIXER_SETTING
-	uci set mixer.@mixer[0].UHFChan=$1
+
 	uci set mixer.@mixer[0].UHFFreq=$UHFFREQ
 
 ## Wifi radio settings

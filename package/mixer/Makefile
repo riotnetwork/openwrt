@@ -51,7 +51,7 @@ define Package/mixer/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mixer $(1)/usr/sbin/
 
-	$(INSTALL_BIN) ./files/usr/sbin/UHFChan.sh $(1)/usr/sbin/UHFChan
+	$(INSTALL_BIN) ./files/usr/sbin/UHFChan.sh $(1)/usr/sbin/tvws
 
 	$(INSTALL_DIR) $(1)/etc/init.d/
 	$(INSTALL_BIN) ./files/etc/init.d/mixer.init $(1)/etc/init.d/mixer

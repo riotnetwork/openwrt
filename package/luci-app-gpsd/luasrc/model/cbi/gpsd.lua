@@ -8,7 +8,7 @@ Map (config, title, description)
     description: description shown in the UI
 ]]--
 -- working with /etc/config/gpsd
-m = Map("gpsd", "GPSd", translate("gpsd is a service daemon that monitors GNSSS or AIS receivers attached through serial or USB ports, making all data on the location/course/velocity of the sensors available to be queried on a TCP port of the host system."))
+m = Map("gpsd", "GPSd", translate("gpsd is a service daemon that monitors GNSS or AIS receivers attached through serial or USB ports, making all data on the location/course/velocity of the sensors available to be queried on a TCP port of the host system."))
 
 -- TypedSection (type, title, description)
 s = m:section(TypedSection, "gpsd", "Configuration options")
