@@ -29,7 +29,7 @@ start_instance() {
 	[ $enabled -gt 0 ] || return 1
 
 	procd_open_instance
-	procd_set_param command "$PROG $UHFChan"
+	procd_set_param command $PROG $UHFChan
 	# Send stdout/stderr output to the system log
 	# Use command logread to see the log
 	procd_set_param stderr 1
