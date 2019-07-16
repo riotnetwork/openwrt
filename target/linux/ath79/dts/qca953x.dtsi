@@ -245,13 +245,14 @@
 	builtin-switch;
 
 	builtin_switch: switch0@1f {
-		compatible = "qca,ar8229-builtin";
+		compatible = "qca,ar8229";
 
 		reg = <0x1f>;
 		resets = <&rst 8>;
 		reset-names = "switch";
 		phy-mode = "gmii";
-		phy4-mii-enable;
+		qca,phy4-mii-enable;
+		qca,mib-poll-interval = <500>;
 
 		mdio-bus {
 			#address-cells = <1>;
@@ -273,7 +274,7 @@
 &eth1 {
 	status = "okay";
 
-	compatible = "qca,qca9530-eth", "syscon", "simple-mfd";
+	compatible = "qca,qca9530-eth", "syscon";
 	resets = <&rst 13>;
 	reset-names = "mac";
 

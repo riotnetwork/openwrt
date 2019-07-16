@@ -160,6 +160,67 @@ endef
 
 $(eval $(call KernelPackage,fb-sys-fops))
 
+
+define KernelPackage/fb-sys-ram
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=Framebuffer in system RAM support
+  DEPENDS:=+kmod-fb
+  KCONFIG:= \
+	CONFIG_FB_SYS_COPYAREA \
+	CONFIG_FB_SYS_FILLRECT \
+	CONFIG_FB_SYS_IMAGEBLIT
+  FILES:= \
+	$(LINUX_DIR)/drivers/video/fbdev/core/syscopyarea.ko \
+	$(LINUX_DIR)/drivers/video/fbdev/core/sysfillrect.ko \
+	$(LINUX_DIR)/drivers/video/fbdev/core/sysimgblt.ko
+  AUTOLOAD:=$(call AutoLoad,07,syscopyarea sysfillrect sysimgblt)
+endef
+
+define KernelPackage/fb-sys-fops/description
+ Kernel support for framebuffers in system RAM
+endef
+
+$(eval $(call KernelPackage,fb-sys-ram))
+
+
+define KernelPackage/fb-tft
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=Support for small TFT LCD display modules
+  DEPENDS:= \
+	  @GPIO_SUPPORT @!LINUX_4_9 +kmod-backlight \
+	  +kmod-fb +kmod-fb-sys-fops +kmod-fb-sys-ram +kmod-spi-bitbang
+  KCONFIG:= \
+       CONFIG_FB_BACKLIGHT=y \
+       CONFIG_FB_DEFERRED_IO=y \
+       CONFIG_FB_TFT
+  FILES:= \
+       $(LINUX_DIR)/drivers/staging/fbtft/fbtft.ko
+  AUTOLOAD:=$(call AutoLoad,08,fbtft)
+endef
+
+define KernelPackage/fb-tft/description
+  Support for small TFT LCD display modules
+endef
+
+$(eval $(call KernelPackage,fb-tft))
+
+
+define KernelPackage/fb-tft-ili9486
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=FB driver for the ILI9486 LCD Controller
+  DEPENDS:=+kmod-fb-tft
+  KCONFIG:=CONFIG_FB_TFT_ILI9486
+  FILES:=$(LINUX_DIR)/drivers/staging/fbtft/fb_ili9486.ko
+  AUTOLOAD:=$(call AutoLoad,09,fb_ili9486)
+endef
+
+define KernelPackage/fb-tft-ili9486/description
+  FB driver for the ILI9486 LCD Controller
+endef
+
+$(eval $(call KernelPackage,fb-tft-ili9486))
+
+
 define KernelPackage/drm
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=Direct Rendering Manager (DRM) support
@@ -178,10 +239,45 @@ endef
 
 $(eval $(call KernelPackage,drm))
 
+define KernelPackage/drm-ttm
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=GPU memory management subsystem
+  DEPENDS:=@DISPLAY_SUPPORT +kmod-drm
+  KCONFIG:=CONFIG_DRM_TTM
+  FILES:=$(LINUX_DIR)/drivers/gpu/drm/ttm/ttm.ko
+  AUTOLOAD:=$(call AutoProbe,ttm)
+endef
+
+define KernelPackage/drm-ttm/description
+  GPU memory management subsystem for devices with multiple GPU memory types.
+  Will be enabled automatically if a device driver uses it.
+endef
+
+$(eval $(call KernelPackage,drm-ttm))
+
+define KernelPackage/drm-kms-helper
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=CRTC helpers for KMS drivers
+  DEPENDS:=@DISPLAY_SUPPORT +kmod-drm +kmod-fb +kmod-fb-sys-fops +kmod-fb-cfb-copyarea \
+	+kmod-fb-cfb-fillrect +kmod-fb-cfb-imgblt +kmod-fb-sys-ram
+  KCONFIG:= \
+    CONFIG_DRM_KMS_HELPER \
+    CONFIG_DRM_KMS_FB_HELPER=y
+  FILES:=$(LINUX_DIR)/drivers/gpu/drm/drm_kms_helper.ko
+  AUTOLOAD:=$(call AutoProbe,drm_kms_helper)
+endef
+
+define KernelPackage/drm-kms-helper/description
+  CRTC helpers for KMS drivers.
+endef
+
+$(eval $(call KernelPackage,drm-kms-helper))
+
 define KernelPackage/drm-amdgpu
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=AMDGPU DRM support
-  DEPENDS:=@TARGET_x86 @DISPLAY_SUPPORT +kmod-drm +kmod-i2c-algo-bit +amdgpu-firmware
+  DEPENDS:=@TARGET_x86 @DISPLAY_SUPPORT +kmod-backlight +kmod-drm-ttm \
+	+kmod-drm-kms-helper +kmod-i2c-algo-bit +amdgpu-firmware
   KCONFIG:=CONFIG_DRM_AMDGPU \
 	CONFIG_DRM_AMDGPU_SI=y \
 	CONFIG_DRM_AMDGPU_CIK=y \
@@ -203,7 +299,7 @@ $(eval $(call KernelPackage,drm-amdgpu))
 define KernelPackage/drm-imx
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=Freescale i.MX DRM support
-  DEPENDS:=@TARGET_imx6 +kmod-drm +kmod-fb +kmod-fb-cfb-copyarea +kmod-fb-cfb-imgblt +kmod-fb-cfb-fillrect +kmod-fb-sys-fops
+  DEPENDS:=@TARGET_imx6 +kmod-drm-kms-helper
   KCONFIG:=CONFIG_DRM_IMX \
 	CONFIG_DRM_FBDEV_EMULATION=y \
 	CONFIG_DRM_FBDEV_OVERALLOC=100 \
@@ -211,11 +307,6 @@ define KernelPackage/drm-imx
 	CONFIG_RESET_CONTROLLER=y \
 	CONFIG_DRM_IMX_IPUV3 \
 	CONFIG_IMX_IPUV3 \
-	CONFIG_DRM_KMS_HELPER \
-	CONFIG_FB_SYS_FILLRECT \
-	CONFIG_FB_SYS_COPYAREA \
-	CONFIG_FB_SYS_IMAGEBLIT \
-	CONFIG_DRM_KMS_FB_HELPER=y \
 	CONFIG_DRM_GEM_CMA_HELPER=y \
 	CONFIG_DRM_KMS_CMA_HELPER=y \
 	CONFIG_DRM_IMX_FB_HELPER \
@@ -225,12 +316,8 @@ define KernelPackage/drm-imx
 	CONFIG_DRM_IMX_HDMI=n
   FILES:= \
 	$(LINUX_DIR)/drivers/gpu/drm/imx/imxdrm.ko \
-	$(LINUX_DIR)/drivers/gpu/ipu-v3/imx-ipu-v3.ko \
-	$(LINUX_DIR)/drivers/video/fbdev/core/syscopyarea.ko \
-	$(LINUX_DIR)/drivers/video/fbdev/core/sysfillrect.ko \
-	$(LINUX_DIR)/drivers/video/fbdev/core/sysimgblt.ko \
-	$(LINUX_DIR)/drivers/gpu/drm/drm_kms_helper.ko
-  AUTOLOAD:=$(call AutoLoad,05,imxdrm imx-ipu-v3 imx-ipuv3-crtc)
+	$(LINUX_DIR)/drivers/gpu/ipu-v3/imx-ipu-v3.ko
+  AUTOLOAD:=$(call AutoLoad,08,imxdrm imx-ipu-v3 imx-ipuv3-crtc)
 endef
 
 define KernelPackage/drm-imx/description
@@ -250,7 +337,7 @@ define KernelPackage/drm-imx-hdmi
 	$(LINUX_DIR)/drivers/gpu/drm/bridge/synopsys/dw-hdmi.ko \
 	$(LINUX_DIR)/drivers/gpu/drm/bridge/synopsys/dw-hdmi-ahb-audio.ko \
 	$(LINUX_DIR)/drivers/gpu/drm/imx/dw_hdmi-imx.ko
-  AUTOLOAD:=$(call AutoLoad,05,dw-hdmi dw-hdmi-ahb-audio.ko dw_hdmi-imx)
+  AUTOLOAD:=$(call AutoLoad,08,dw-hdmi dw-hdmi-ahb-audio.ko dw_hdmi-imx)
 endef
 
 define KernelPackage/drm-imx-hdmi/description
@@ -275,7 +362,7 @@ define KernelPackage/drm-imx-ldb
 	CONFIG_DRM_PANEL_SITRONIX_ST7789V=n
   FILES:=$(LINUX_DIR)/drivers/gpu/drm/imx/imx-ldb.ko \
 	$(LINUX_DIR)/drivers/gpu/drm/panel/panel-simple.ko
-  AUTOLOAD:=$(call AutoLoad,05,imx-ldb)
+  AUTOLOAD:=$(call AutoLoad,08,imx-ldb)
 endef
 
 define KernelPackage/drm-imx-ldb/description
@@ -287,7 +374,8 @@ $(eval $(call KernelPackage,drm-imx-ldb))
 define KernelPackage/drm-radeon
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=Radeon DRM support
-  DEPENDS:=@TARGET_x86 @DISPLAY_SUPPORT +kmod-drm +kmod-i2c-algo-bit +radeon-firmware
+  DEPENDS:=@TARGET_x86 @DISPLAY_SUPPORT +kmod-backlight +kmod-drm-kms-helper \
+	+kmod-drm-ttm +kmod-i2c-algo-bit +radeon-firmware
   KCONFIG:=CONFIG_DRM_RADEON
   FILES:=$(LINUX_DIR)/drivers/gpu/drm/radeon/radeon.ko
   AUTOLOAD:=$(call AutoProbe,radeon)
@@ -345,7 +433,7 @@ endef
 
 define KernelPackage/video-videobuf2
   TITLE:=videobuf2 lib
-  DEPENDS:=+kmod-dma-buf @!LINUX_3_18
+  DEPENDS:=+kmod-dma-buf
   KCONFIG:= \
 	CONFIG_VIDEOBUF2_CORE \
 	CONFIG_VIDEOBUF2_MEMOPS \

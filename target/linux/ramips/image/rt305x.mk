@@ -21,11 +21,6 @@ define Build/hilink-header
 	mv $@.new $@
 endef
 
-define Build/jcg-header
-	$(STAGING_DIR_HOST)/bin/jcgimage -v $(1) -u $@ -o $@.new
-	mv $@.new $@
-endef
-
 
 define Device/3g150b
   DTS := 3G150B
@@ -909,6 +904,13 @@ define Device/kn
   DEVICE_PACKAGES := kmod-usb-core kmod-usb2 kmod-usb-ehci kmod-usb-ledtrig-usbport
 endef
 TARGET_DEVICES += kn
+
+define Device/zyxel_keenetic-start
+  DTS := kn_st
+  IMAGE_SIZE := $(ralink_default_fw_size_4M)
+  DEVICE_TITLE := ZyXEL Keenetic Start
+endef
+TARGET_DEVICES += zyxel_keenetic-start
 
 define Device/zorlik_zl5900v2
   DTS := ZL5900V2

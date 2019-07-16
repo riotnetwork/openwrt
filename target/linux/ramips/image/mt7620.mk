@@ -3,7 +3,7 @@
 #
 
 DEVICE_VARS += TPLINK_FLASHLAYOUT TPLINK_HWID TPLINK_HWREV TPLINK_HWREVADD TPLINK_HVERSION \
-	DLINK_ROM_ID DLINK_FAMILY_MEMBER DLINK_FIRMWARE_SIZE
+	DLINK_ROM_ID DLINK_FAMILY_MEMBER DLINK_FIRMWARE_SIZE DLINK_IMAGE_OFFSET
 
 define Build/elecom-header
 	cp $@ $(KDIR)/v_0.0.0.bin
@@ -50,6 +50,24 @@ define Device/alfa-network_ac1200rm
   DEVICE_PACKAGES := kmod-mt76x2 kmod-usb2 kmod-usb-ohci uboot-envtools
 endef
 TARGET_DEVICES += alfa-network_ac1200rm
+
+define Device/alfa-network_tube-e4g
+  DTS := TUBE-E4G
+  IMAGE_SIZE := 16064k
+  DEVICE_TITLE := ALFA Network Tube-E4G
+  DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci uboot-envtools uqmi \
+	-iwinfo -kmod-rt2800-soc -wpad-basic
+endef
+TARGET_DEVICES += alfa-network_tube-e4g
+
+define Device/amit_jboot
+  DLINK_IMAGE_OFFSET := 0x10000
+  KERNEL := $(KERNEL_DTB)
+  IMAGES += factory.bin
+  IMAGE/sysupgrade.bin := mkdlinkfw | pad-rootfs | append-metadata
+  IMAGE/factory.bin := mkdlinkfw | pad-rootfs | mkdlinkfw-factory
+  DEVICE_PACKAGES := jboot-tools kmod-usb2 kmod-usb-ohci
+endef
 
 define Device/Archer
   TPLINK_HWREVADD := 0
@@ -172,61 +190,59 @@ define Device/dir-810l
 endef
 TARGET_DEVICES += dir-810l
 
+define Device/dlink_dir-510l
+  $(Device/amit_jboot)
+  DTS := DIR-510L
+  DEVICE_TITLE := D-Link DIR-510L
+  DEVICE_PACKAGES += kmod-mt76x0e
+  DLINK_ROM_ID := DLK6E3805001
+  DLINK_FAMILY_MEMBER := 0x6E38
+  DLINK_FIRMWARE_SIZE := 0xDE0000
+  DLINK_IMAGE_OFFSET := 0x210000
+endef
+TARGET_DEVICES += dlink_dir-510l
+
 define Device/dlink_dwr-116-a1
+  $(Device/amit_jboot)
   DTS := DWR-116-A1
   DEVICE_TITLE := D-Link DWR-116 A1/A2
-  DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci jboot-tools
   DLINK_ROM_ID := DLK6E3803001
   DLINK_FAMILY_MEMBER := 0x6E38
   DLINK_FIRMWARE_SIZE := 0x7E0000
-  KERNEL := $(KERNEL_DTB)
-  IMAGES += factory.bin
-  IMAGE/sysupgrade.bin := mkdlinkfw | pad-rootfs | append-metadata
-  IMAGE/factory.bin := mkdlinkfw | pad-rootfs | mkdlinkfw-factory
 endef
 TARGET_DEVICES += dlink_dwr-116-a1
 
 define Device/dlink_dwr-118-a1
+  $(Device/amit_jboot)
   DTS := DWR-118-A1
   DEVICE_TITLE := D-Link DWR-118 A1
-  DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci jboot-tools kmod-mt76x0e
+  DEVICE_PACKAGES += kmod-mt76x0e
   DLINK_ROM_ID := DLK6E3811001
   DLINK_FAMILY_MEMBER := 0x6E38
   DLINK_FIRMWARE_SIZE := 0xFE0000
-  KERNEL := $(KERNEL_DTB)
-  IMAGES += factory.bin
-  IMAGE/sysupgrade.bin := mkdlinkfw | pad-rootfs | append-metadata
-  IMAGE/factory.bin := mkdlinkfw | pad-rootfs | mkdlinkfw-factory
 endef
 TARGET_DEVICES += dlink_dwr-118-a1
 
 define Device/dlink_dwr-118-a2
+  $(Device/amit_jboot)
   DTS := DWR-118-A2
   DEVICE_TITLE := D-Link DWR-118 A2
-  DEVICE_PACKAGES := kmod-mt76x2 kmod-usb2 kmod-usb-ohci jboot-tools
+  DEVICE_PACKAGES += kmod-mt76x2
   DLINK_ROM_ID := DLK6E3814001
   DLINK_FAMILY_MEMBER := 0x6E38
   DLINK_FIRMWARE_SIZE := 0xFE0000
-  KERNEL := $(KERNEL_DTB)
-  IMAGES += factory.bin
-  IMAGE/sysupgrade.bin := mkdlinkfw | pad-rootfs | append-metadata
-  IMAGE/factory.bin := mkdlinkfw | pad-rootfs | mkdlinkfw-factory
 endef
 TARGET_DEVICES += dlink_dwr-118-a2
 
 define Device/dlink_dwr-921-c1
+  $(Device/amit_jboot)
   DTS := DWR-921-C1
   IMAGE_SIZE := $(ralink_default_fw_size_16M)
   DEVICE_TITLE := D-Link DWR-921 C1
   DLINK_ROM_ID := DLK6E2414001
   DLINK_FAMILY_MEMBER := 0x6E24
   DLINK_FIRMWARE_SIZE := 0xFE0000
-  KERNEL := $(KERNEL_DTB)
-  IMAGES += factory.bin
-  IMAGE/sysupgrade.bin := mkdlinkfw | pad-rootfs | append-metadata
-  IMAGE/factory.bin := mkdlinkfw | pad-rootfs | mkdlinkfw-factory
-  DEVICE_PACKAGES := jboot-tools \
-	kmod-usb2 kmod-usb-net-qmi-wwan kmod-usb-serial-option uqmi
+  DEVICE_PACKAGES += kmod-usb-net-qmi-wwan kmod-usb-serial-option uqmi
 endef
 TARGET_DEVICES += dlink_dwr-921-c1
 
@@ -239,18 +255,14 @@ endef
 TARGET_DEVICES += dlink_dwr-921-c3
 
 define Device/dlink_dwr-922-e2
+  $(Device/amit_jboot)
   DTS := DWR-922-E2
   IMAGE_SIZE := $(ralink_default_fw_size_16M)
   DEVICE_TITLE := D-Link DWR-922 E2
   DLINK_ROM_ID := DLK6E2414005
   DLINK_FAMILY_MEMBER := 0x6E24
   DLINK_FIRMWARE_SIZE := 0xFE0000
-  KERNEL := $(KERNEL_DTB)
-  IMAGES += factory.bin
-  IMAGE/sysupgrade.bin := mkdlinkfw | pad-rootfs | append-metadata
-  IMAGE/factory.bin := mkdlinkfw | pad-rootfs | mkdlinkfw-factory
-  DEVICE_PACKAGES := jboot-tools \
-	kmod-usb2 kmod-usb-net-qmi-wwan kmod-usb-serial-option uqmi
+  DEVICE_PACKAGES += kmod-usb-net-qmi-wwan kmod-usb-serial-option uqmi
 endef
 TARGET_DEVICES += dlink_dwr-922-e2
 
@@ -346,6 +358,15 @@ define Device/hc5861
 endef
 TARGET_DEVICES += hc5861
 
+define Device/head-weblink_hdrm200
+  DTS := HDRM200
+  IMAGE_SIZE := 16064k
+  DEVICE_TITLE := Head Weblink HDRM2000
+  DEVICE_PACKAGES := kmod-mt76x2 kmod-usb2 kmod-usb-ohci kmod-sdhci-mt7620 \
+		     uqmi kmod-usb-serial kmod-usb-serial-option
+endef
+TARGET_DEVICES += head-weblink_hdrm200
+
 define Device/iodata_wn-ac1167gr
   DTS := WN-AC1167GR
   DEVICE_TITLE := I-O DATA WN-AC1167GR
@@ -357,6 +378,18 @@ define Device/iodata_wn-ac1167gr
   DEVICE_PACKAGES := kmod-mt76x2
 endef
 TARGET_DEVICES += iodata_wn-ac1167gr
+
+define Device/iodata_wn-ac733gr3
+  DTS := WN-AC733GR3
+  DEVICE_TITLE := I-O DATA WN-AC733GR3
+  IMAGE_SIZE := 6992k
+  IMAGES += factory.bin
+  IMAGE/factory.bin := \
+    $$(sysupgrade_bin) | check-size $$$$(IMAGE_SIZE) | \
+    elx-header 01040006 8844A2D168B45A2D
+  DEVICE_PACKAGES := kmod-mt76x0e kmod-switch-rtl8367b
+endef
+TARGET_DEVICES += iodata_wn-ac733gr3
 
 define Device/kimax_u35wf
   DTS := U35WF
@@ -409,16 +442,13 @@ endef
 TARGET_DEVICES += microwrt
 
 define Device/lava_lr-25g001
+  $(Device/amit_jboot)
   DTS := LR-25G001
   DEVICE_TITLE := LAVA LR-25G001
   DLINK_ROM_ID := LVA6E3804001
   DLINK_FAMILY_MEMBER := 0x6E38
   DLINK_FIRMWARE_SIZE := 0xFE0000
-  KERNEL := $(KERNEL_DTB)
-  IMAGES += factory.bin
-  IMAGE/sysupgrade.bin := mkdlinkfw | pad-rootfs | append-metadata
-  IMAGE/factory.bin := mkdlinkfw | pad-rootfs | mkdlinkfw-factory
-  DEVICE_PACKAGES := jboot-tools kmod-usb2 kmod-usb-ohci kmod-mt76x0e
+  DEVICE_PACKAGES += kmod-mt76x0e
 endef
 TARGET_DEVICES += lava_lr-25g001
 
@@ -544,6 +574,7 @@ TARGET_DEVICES += phicomm_k2g
 define Device/rp-n53
   DTS := RP-N53
   DEVICE_TITLE := Asus RP-N53
+  DEVICE_PACKAGES := kmod-rt2800-pci
 endef
 TARGET_DEVICES += rp-n53
 
@@ -647,6 +678,7 @@ define Device/whr-600d
   DTS := WHR-600D
   IMAGE_SIZE := 6848k
   DEVICE_TITLE := Buffalo WHR-600D
+  DEVICE_PACKAGES := kmod-rt2800-pci
 endef
 TARGET_DEVICES += whr-600d
 
@@ -787,6 +819,15 @@ define Device/zbt-we826-32M
   DEVICE_PACKAGES := kmod-mt76x2 kmod-usb2 kmod-usb-ohci kmod-sdhci-mt7620
 endef
 TARGET_DEVICES += zbt-we826-32M
+
+define Device/zbtlink_zbt-we826-e
+  DTS := ZBT-WE826-E
+  IMAGE_SIZE := 32448k
+  DEVICE_TITLE := Zbtlink ZBT-WE826-E
+  DEVICE_PACKAGES := kmod-usb2 kmod-usb-ohci kmod-sdhci-mt7620 uqmi \
+		     kmod-usb-serial kmod-usb-serial-option
+endef
+TARGET_DEVICES += zbtlink_zbt-we826-e
 
 define Device/zbt-wr8305rt
   DTS := ZBT-WR8305RT

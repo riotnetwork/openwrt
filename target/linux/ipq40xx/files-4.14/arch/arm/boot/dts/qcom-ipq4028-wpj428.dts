@@ -93,7 +93,7 @@
 
 		reset {
 			label = "reset";
-			gpios = <&tlmm 63 GPIO_ACTIVE_LOW>;
+			gpios = <&tlmm 62 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_RESTART>;
 		};
 	};
@@ -110,6 +110,7 @@
 		status: rss4 {
 			label = "wpj428:green:rss4";
 			gpios = <&tlmm 5 GPIO_ACTIVE_HIGH>;
+
 		};
 
 		rss3 {

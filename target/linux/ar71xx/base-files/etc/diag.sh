@@ -85,9 +85,6 @@ get_status_led() {
 	tl-wr902ac-v1)
 		status_led="$board:green:power"
 		;;
-	albatross)
-		status_led="albatross:red:system"
-		;;
 	archer-c5|\
 	archer-c7|\
 	tl-mr10u|\
@@ -132,6 +129,7 @@ get_status_led() {
 		status_led="$board:red:sys"
 		;;
 	bullet-m|\
+	bullet-m-xw|\
 	loco-m-xw|\
 	nano-m|\
 	nanostation-m|\
@@ -384,6 +382,7 @@ get_status_led() {
 	rb-lhg-5nd|\
 	rb-map-2nd|\
 	rb-mapl-2nd|\
+	rb-sxt-2nd-r3|\
 	rb-wap-2nd|\
 	rb-wapr-2nd)
 		status_led="rb:green:user"

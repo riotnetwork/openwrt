@@ -68,15 +68,15 @@
 
 		usb1 {
 			label = "tp-link:green:usb1";
-			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
-			trigger-sources = <&hub_port0>;
+			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
+			trigger-sources = <&hub_port1>;
 			linux,default-trigger = "usbport";
 		};
 
 		usb2 {
 			label = "tp-link:green:usb2";
-			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
-			trigger-sources = <&hub_port1>;
+			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
+			trigger-sources = <&hub_port0>;
 			linux,default-trigger = "usbport";
 		};
 
@@ -223,7 +223,7 @@
 			};
 
 			info: partition@f00000 {
-				label = "config";
+				label = "info";
 				reg = <0xf00000 0x0f0000>;
 				read-only;
 			};
@@ -245,6 +245,7 @@
 	phy0: ethernet-phy@0 {
 		reg = <0>;
 		phy-mode = "sgmii";
+		qca,mib-poll-interval = <500>;
 
 		qca,ar8327-initvals = <
 			0x04 0x80080080 /* PORT0 PAD MODE CTRL */

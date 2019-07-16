@@ -53,10 +53,10 @@ define Package/$(PKG_NAME)/install
 	#find $(PKG_BUILD_DIR)/usr/ -name '*.lua' -exec luac -s -o {} {} \;
 
 	$(INSTALL_DIR) $(1)/etc/init.d/
-	$(INSTALL_BIN) ./files/etc/init.d/tvws.init $(1)/etc/init.d/tvws
+	$(INSTALL_BIN) ./root/etc/init.d/tvws.init $(1)/etc/init.d/tvws
 
 	$(INSTALL_DIR) $(1)/etc/config
-	$(INSTALL_CONF) ./files/etc/config/tvws.config $(1)/etc/config/tvws
+	$(INSTALL_CONF) ./root/etc/config/tvws.config $(1)/etc/config/tvws
 
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/
 	$(CP) $(PKG_BUILD_DIR)/usr/lib/lua/luci/* $(1)/usr/lib/lua/luci/

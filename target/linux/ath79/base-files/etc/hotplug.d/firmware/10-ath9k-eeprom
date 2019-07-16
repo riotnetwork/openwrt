@@ -20,7 +20,7 @@ ath9k_eeprom_extract() {
 	[ -n "$mtd" ] || \
 		ath9k_eeprom_die "no mtd device found for partition $part"
 
-	dd if=$mtd of=/lib/firmware/$FIRMWARE bs=1 skip=$offset count=$count 2>/dev/null || \
+	dd if=$mtd of=/lib/firmware/$FIRMWARE iflag=skip_bytes bs=$count skip=$offset count=1 2>/dev/null || \
 		ath9k_eeprom_die "failed to extract from $mtd"
 }
 
@@ -81,7 +81,7 @@ ath9k_patch_fw_mac() {
 			dd of=/lib/firmware/$FIRMWARE conv=notrunc bs=1 seek=$chksum_offset count=2
 	}
 
-	macaddr_2bin $mac | dd of=/lib/firmware/$FIRMWARE conv=notrunc bs=1 seek=$mac_offset count=6
+	macaddr_2bin $mac | dd of=/lib/firmware/$FIRMWARE conv=notrunc oflag=seek_bytes bs=6 seek=$mac_offset count=1
 }
 
 ath9k_patch_fw_mac_crc() {
@@ -105,10 +105,17 @@ case "$FIRMWARE" in
 		ath9k_eeprom_extract "art" 4096 1088
 		ath9k_patch_fw_mac_crc $(mtd_get_mac_text "mac" 4) 2
 		;;
-	dlink,dir-859-a1)
+	dlink,dir-859-a1|\
+	nec,wg1200cr|\
+	wd,mynet-n750)
 		ath9k_eeprom_extract "art" 4096 1088
 		ath9k_patch_fw_mac $(mtd_get_mac_ascii devdata "wlan24mac") 2
 		;;
+	engenius,ecb1750)
+		ath9k_eeprom_extract "art" 4096 1088
+		ath9k_patch_fw_mac $(macaddr_add $(mtd_get_mac_ascii u-boot-env "athaddr") +1) 2
+		;;
+	engenius,epg5000|\
 	iodata,wn-ac1167dgr|\
 	iodata,wn-ac1600dgr|\
 	iodata,wn-ac1600dgr2|\
@@ -137,7 +144,7 @@ case "$FIRMWARE" in
 		ath9k_eeprom_extract "art" 4096 3768
 		;;
 	buffalo,wzr-hp-g450h)
-		ath9k_eeprom_extract "ART" 4096 1088
+		ath9k_eeprom_extract "art" 4096 1088
 		;;
 	dlink,dir-825-c1|\
 	dlink,dir-835-a1)
@@ -174,6 +181,10 @@ case "$FIRMWARE" in
 		;;
 	ubnt,unifi)
 		ath9k_eeprom_extract "art" 4096 2048
+		;;
+	wd,mynet-n750)
+		ath9k_eeprom_extract "art" 20480 1088
+		ath9k_patch_fw_mac $(mtd_get_mac_ascii devdata "wlan5mac") 2
 		;;
 	wd,mynet-wifi-rangeextender)
 		ath9k_eeprom_extract "art" 4096 4096
